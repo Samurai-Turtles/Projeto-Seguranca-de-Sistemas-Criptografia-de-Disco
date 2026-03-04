@@ -2,57 +2,48 @@
 
 ## 1. Introdução
 
-Falar sobre uma leve introdução à criptografia de disco, destacando os seguintes pontos:
+Dar uma leve introdução à criptografia de disco:
 
-- explicar o que é FDE e dizer que ele visa a proteção de dados
-- dizer os benefícios (por exemplo, protege os dados em caso de roubo ou de ataques de terceiros)
-- explicar que integridade não é o foco principal
+- Explicar o que é FDE (Full Disk Encryption)
+- Falar (bem por cima) sobre os benefícios do FDE: confidencialidade, integridade
+- Destacar que integridade não é o foco principal, sendo "melhor elaborado" apenas em algumas implementações.
+- Falar sobre os casos de uso do FDE: em que casos de uso ele seria útil.
 
 ## 2. Trade-offs
 
-Falar sobre os benefícios e possíveis riscos do uso de FDE
-
-**_TODO: Falar mais benefícios e riscos?_**
-
-### Benefícios
-
-- explicar como ele garante a segurança de dados em repouso
-
-### Riscos
-
-- porém causa pequenos impactos no desempenho de operações (CPU e IO)
-- explicar riscos de perda de dados em caso de esquecimento da senha ou corrupção
+- Elaborar mais sobre benefícios do FDE: o principal sendo segurança/confidencialidade de dados em repouso.
+- Falar também sobre impactos negativos no desempenho e (por cima) sobre os riscos atrelados, como perda de dados.
+- Seria interessante reunir diversos benefícios e riscos.
 
 ## 3. Evolução
 
-**_TODO: falar sobre exemplos de implementações antigas e modernas_**
-
-Falar sobre uma linha do tempo de implementações, explicando que as antigas eram baseadas apenas em software e tinham processamento serial (AES-CBC entra aqui?). Também falar que abordagens modernas usam AES-XTS e instruções de hardware
+- Fazer um comparativo entre soluções históricas e abordagens modernas
+- Destacar benefícios e malefícios de cada abordagem
+- Destacar como abordagens modernas são melhores em relação às antigas
+- É interessante também mostrar exemplos de abordagens
 
 ## 4. Algoritmos
 
-Dar uma visão geral (bem rápida) dos algoritmos (AES-CBC e CTR) como vimos em sala. Explicar em mais detalhes o XTS (seus benefícios em relação aos demais (riscos tbm?), sistema de dupla chave, tweak)
-
-Sobre o Tweak: Use um exemplo simples. "Se você salvar um arquivo com 1000 letras 'A' seguidas, um algoritmo antigo poderia gerar blocos cifrados repetidos, dando pistas a um atacante. O AES-XTS usa a posição (o setor do disco) como ingrediente da matemática, fazendo com que cada bloco pareça um ruído totalmente diferente, mesmo que o texto original seja o mesmo."
-
-Sobre o Paralelismo: Lembre a sua audiência do Slide 3. "Como o XTS não precisa que o bloco 1 termine para começar a calcular o bloco 2, nós conseguimos paralelizar o processo. É isso que permite que seu computador leia e grave gigabytes por segundo num SSD criptografado sem travar a máquina."
-
-Alta Performance (Paralelismo): Permite o processamento de múltiplos blocos de dados simultaneamente (independência de blocos), eliminando gargalos de I/O e extraindo o máximo de SSDs modernos e aceleração via hardware (ex: AES-NI).
+- Dar uma visão geral (rápida) dos algoritmos vistos em sala
+- Explicar melhor o algoritmo AES-XTS (como é melhor que os demais, como é pior, e seu funcionamento interno, porque virou o padrão moderno):
+  - Tweak: dar um exemplo simples de uso.
+  - Paralelismo e alta performance: explicar como o XTS garante paralelismo e, como consequência, alta performance.
 
 ## 5. Ferramentas de mercado
 
-Falar sobre o LUKS, BitLocker, Cloud Providers. Comparar eles (n tem muita coisa diferente do slide aqui).
+- Exemplificar algumas ferramentas usadas no mercado e fazer um comparativo entre elas.
+- Comparar as ferramentas sob vários aspectos
+- Destacar se há uma solução objetivamente melhor que a outra ou não.
 
 ## 6. Recuperação de disco e riscos teóricos
 
-Falar sobre riscos de falhas de hardware e seus impactos.
-Falar em detalhes sobre o trade-off entre recuperabilidade e privacidade. Dar exemplos.
+- Falar em mais detalhes sobre riscos e impactos atrelados ao FDE. O principal deles são falhas de hardware.
+- Não é exatamente um risco, mas falar sobre o trade-off entre recuperabilidade e privacidade, exemplificando se necessário.
 
 ## 7. Modalidades de implementação
 
-Falar sobre implementação durante a instalação e pós-instalação.
-Destacar comparações / trade-offs e exemplificar.
+- Dar uma introdução rápida sobre as diversas modalidades de implementação
 
 ## 8. Demonstração
 
-Mostrar rodando em sistemas linux e em um cloud provider.
+- Mostrar a criptografia na prática com os métodos escolhidos.
