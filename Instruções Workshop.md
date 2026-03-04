@@ -1,6 +1,7 @@
 # Fist demo - Full Disk Encryption on local VMs through QEMU + KVM
 
 ## Test environment
+
 - Host OS: Fedora 42 Workstation (Linux 6.18)
 - TestVM OS: Ubuntu
 
@@ -100,4 +101,79 @@ one:
 head -n 50 <path/to/image.qcow2>
 ```
 
-# Second demo - TODO
+# Second demo
+
+## Test environment
+
+- Cloud Provider: AWS
+- Host OS: EC2 Instance (Default configurations)
+- TestVM OS: Ubuntu Server
+- Tooling: cryptsetup (LUKS)
+
+## Setting up the EC2 Instance & disk
+
+- Launch the EC2 Instance: Navigate to the Amazon EC2 Dashboard and create a new instance. Select Ubuntu as the Amazon Machine Image (AMI) instead of the default Amazon Linux. Default instance types (like `t2.micro`) are sufficient for this demo.
+- Create and Attach a Volume: Navigate to Elastic Block Store (EBS) > Volumes. Create a new EBS volume in the same Availability Zone as your instance. Select the volume, choose Attach volume, and attach it to your Ubuntu EC2 instance.
+
+## Encrypting and mounting the disk
+
+Once your instance is running and the volume is attached, SSH into your Ubuntu VM.
+
+### Step 1: Identify the newly attached disk
+
+Run the following command to list all available block devices. Look for the unformatted disk you just attached (often named `/dev/sdb`, `/dev/xvdf`, or `/dev/nvme1n1` depending on the instance type).
+
+```bash
+lsblk
+```
+
+### Step 2: Install the encryption tool
+
+Install `cryptsetup`, which provides the utilities needed to configure LUKS encryption:
+
+```bash
+sudo apt update && sudo apt install cryptsetup -y
+```
+
+### Step 3: Initialize the LUKS partition
+
+This step will erase any existing data on the disk. Before you can open and use the disk, you must format it as a LUKS encrypted partition. You will be prompted to confirm (type YES in all caps) and to set a secure passphrase.
+
+Assuming the disk is `/dev/sdb`, run the following command.
+
+```bash
+sudo cryptsetup luksFormat /dev/sdb
+```
+
+### Step 4: Open the encrypted disk
+
+Now, map the encrypted physical disk to a virtual device mapper. Replace `<encrypted_disk_name>` with a descriptive name of your choice. You will need to enter the passphrase you created in Step 3. This creates a decrypted mapping located at `/dev/mapper/<encrypted_disk_name>`
+
+```bash
+sudo cryptsetup open /dev/sdb <encrypted_disk_name>
+```
+
+### Step 5: Format the mapped volume
+
+Create a filesystem on the new decrypted mapping. We will use the ext4 filesystem for this demo.
+
+```bash
+sudo mkfs.ext4 /dev/mapper/<encrypted_disk_name>
+```
+
+### Step 6: Mount the encrypted disk
+
+Finally, create a directory to serve as the mount point and mount the decrypted mapping to it.
+
+Finally, run
+
+```bash
+sudo mkdir /mnt/<mount_point>
+sudo mount /dev/mapper/<encrypted_disk_name> /mnt/<mount_point> 
+```
+
+Verify that the disk is successfully mounted and available by running:
+
+```bash
+df -h
+```
