@@ -1,52 +1,49 @@
-# Fist demo - Full Disk Encryption on local VMs through QEMU + KVM
+# Primeira demo - Full Disk Encryption em VMs locais via QEMU + KVM
 
-## Test environment
+## Ambiente de testes
 
-- Host OS: Fedora 42 Workstation (Linux 6.18)
-- TestVM OS: Ubuntu
+- SO do Host: Fedora 42 Workstation (Linux 6.18)
+- SO da VM de Teste: Ubuntu
 
-## Setting up QEMU + VirtManager
+## Configurando QEMU + VirtManager
 
-Install the required packages with the command below:
+Instale os pacotes necessários com o comando abaixo:
 
 ```bash
-sudo dnf install @virtualization # installs VirtManager and QEMU
+sudo dnf install @virtualization # instala VirtManager e QEMU
 ```
 
-After that, enable the virtualization service `libvirtd`:
+Depois disso, habilite o serviço de virtualização `libvirtd`:
 
 ```bash
 sudo systemctl enable --now libvirtd
 ```
 
-Optionally, add the current user to the `libvirt` group to
-avoid typing `sudo` every time.
+Opcionalmente, adicione o usuário atual ao grupo `libvirt` para evitar ter que digitar `sudo` toda vez.
 
 ```bash
 sudo usermod -aG libvirt $(whoami)
 ```
 
-## Accessing the image disk file
+## Acessando o arquivo da imagem de disco
 
-After setting up the local VM as you wish, then
+Depois de configurar a VM local como desejado,
 
-We'll use `guestmount` to mount the VM disk file into our host's
-filesystem, so we can access the files created during our tests.
+Usamos `guestmount` para montar o arquivo de disco da VM no sistema de arquivos do host, para que possamos acessar os arquivos criados durante os testes.
 
 ```bash
 guestmount -a <path/of/file.qcow2> -m <guest_partition> --ro <target_dir>
 ```
 
-After verifying that the test files are present, we unmount the
-image file using the following command:
+Depois de verificar que os arquivos de teste estão presentes, desmontamos o arquivo de imagem usando o seguinte comand:
 
 ```bash
 guestunmount <target_dir>
 ```
 
-## Encrypting the image with QEMU
+## Encriptando a imagem com QEMU
 
-Use the following command to create an encrypted version of the image:
+Use o seguinte comando para criar uma versão encriptada da imagem:
 
 ```bash
 qemu-img convert -f qcow2 -O qcow2 --object secret,id=sec0,data=<password> \
@@ -54,21 +51,21 @@ qemu-img convert -f qcow2 -O qcow2 --object secret,id=sec0,data=<password> \
     <path/to/source-image.qcow2> <path/to/output-image.qcow2>
 ```
 
-Once finished, you can verify the state of the new image file with:
+Assim que a execução do comando anterior acabar, é possível verificar o estado do novo arquivo de imagem com:
 
 ```bash
 qemu-img info <path/to/output-image.qcow2>
 ```
 
-The command above should yield something as the following:
+O comando acima deve produzir como saída algo do tipo:
 
 ```bash
-# Output example
+# Exemplo de saída
 # ...
 file format: qcow2
 virtual size: 25 GiB (26843545600 bytes)
 disk size: 8.64 GiB
-encrypted: yes # image is encrypted
+encrypted: yes # imagem está encriptada
 cluster_size: 65536
 Format specific information:
     compat: 1.1
@@ -81,98 +78,91 @@ Format specific information:
         hash alg: sha256
         cipher alg: aes-256
         uuid: 7a80f591-517c-45c6-b25a-5c7962a74555
-        format: luks # encrypted using LUKS
-        cipher mode: xts # encrypted with AES-XTS
+        format: luks # encriptada usando LUKS
+        cipher mode: xts # encriptada com AES-XTS
         slots:
         # ...
     file length: 8.64 GiB (9278717952 bytes)
     disk size: 8.64 GiB
 ```
 
-## Checking image encryption
+## Checando encriptação da imagem
 
-You can manually verify if the disk image is, indeed, encrypted by
-checking the raw contents of the QCOW2 files.
+Você pode manualmente verificar que a imagem do disco está de fato encriptada checando o conteúdo bruto dos arquivos QCOW2.
 
-Run the following command against the encrypted image and the original
-one:
+Execute o seguinte comando para a imagem encriptada e a original:
 
 ```bash
 head -n 50 <path/to/image.qcow2>
 ```
 
-# Second demo
+# Segunda demo - Full Disk Encryption em VMs em um provedor de nuvem
 
-## Test environment
+## Ambiente de testes
 
-- Cloud Provider: AWS
-- Host OS: EC2 Instance (Default configurations)
-- TestVM OS: Ubuntu Server
-- Tooling: cryptsetup (LUKS)
+- Provedor de nuvem: AWS
+- So do host: EC2 Instance (Default configurations)
+- So da VM de Testes: Ubuntu Server
 
-## Setting up the EC2 Instance & disk
+## Configurando a instância EC2 e a instância de disco
 
-- Launch the EC2 Instance: Navigate to the Amazon EC2 Dashboard and create a new instance. Select Ubuntu as the Amazon Machine Image (AMI) instead of the default Amazon Linux. Default instance types (like `t2.micro`) are sufficient for this demo.
-- Create and Attach a Volume: Navigate to Elastic Block Store (EBS) > Volumes. Create a new EBS volume in the same Availability Zone as your instance. Select the volume, choose Attach volume, and attach it to your Ubuntu EC2 instance.
+- Inicie a instância EC2: navegue até o Amazon EC2 Dashboard e crie uma nova instância. Selecione Ubuntu como a Amazon Machine Image (AMI) em vez do Amazon Linux, que vem como padrão. Tipos de instância padrão (como `t2.micro`) são suficientes para essa demo.
+- Crie e anexe um volume: navegue até Elastic Block Store (EBS) > Volumes. Crie um novo volume EBS na mesma Availability Zone que a sua instância. Selecione o volume, escolha Attach volume e anexe-o à sua instância do EC2 Ubuntu.
 
-## Encrypting and mounting the disk
+## Encriptando e montando o disco
 
-Once your instance is running and the volume is attached, SSH into your Ubuntu VM.
+Assim que sua instância estiver em execução com o volume anexado, conecte-se a ela via SSH.
 
-### Step 1: Identify the newly attached disk
+### Identifique o novo disco anexado
 
-Run the following command to list all available block devices. Look for the unformatted disk you just attached (often named `/dev/sdb`, `/dev/xvdf`, or `/dev/nvme1n1` depending on the instance type).
+Execute o seguinte comando para listar todos os dispositivos de bloco disponíveis. Procure o disco não formatado que você acabou de anexar (geralmente nomeado `/dev/sdb`, `/dev/xvdf` ou `/dev/nvme1n1`, dependendo do tipo de instância. Para essa demo, assume-se que o disco é `/dev/sdb`).
 
 ```bash
 lsblk
 ```
 
-### Step 2: Install the encryption tool
+### Instale a ferramenta de encriptação
 
-Install `cryptsetup`, which provides the utilities needed to configure LUKS encryption:
+Instale `cryptsetup`, que provê as utilidades necessárias para configurar encripração via LUKS:
 
 ```bash
 sudo apt update && sudo apt install cryptsetup -y
 ```
 
-### Step 3: Initialize the LUKS partition
+### Inicialize a partição LUKS
 
-This step will erase any existing data on the disk. Before you can open and use the disk, you must format it as a LUKS encrypted partition. You will be prompted to confirm (type YES in all caps) and to set a secure passphrase.
-
-Assuming the disk is `/dev/sdb`, run the following command.
+Esse passo irá apagar qualquer dado existente no disco. Antes de abrir e usar o disco, você deve formatá-lo como uma partição encriptada LUKS. Será solicitado uma confirmação (digite `YES`) e uma passphrase segura. Rode o seguinte comando, assumindo que o disco é `/dev/sdb`:
 
 ```bash
 sudo cryptsetup luksFormat /dev/sdb
 ```
 
-### Step 4: Open the encrypted disk
+### Abra o disco encriptado
 
-Now, map the encrypted physical disk to a virtual device mapper. Replace `<encrypted_disk_name>` with a descriptive name of your choice. You will need to enter the passphrase you created in Step 3. This creates a decrypted mapping located at `/dev/mapper/<encrypted_disk_name>`
-
-```bash
-sudo cryptsetup open /dev/sdb <encrypted_disk_name>
-```
-
-### Step 5: Format the mapped volume
-
-Create a filesystem on the new decrypted mapping. We will use the ext4 filesystem for this demo.
+Agora, mapeia o disco físico encriptado para um mapeador de dispositivo virtual. Troque `<nome_do_disco_encriptado>` por um nome de sua escolha. Você deve digitar a passphrase criada no passo anterior. Isso irá criar um mapeamento decriptado localizado em `/dev/mapper/<nome_do_disco_encriptado>`
 
 ```bash
-sudo mkfs.ext4 /dev/mapper/<encrypted_disk_name>
+sudo cryptsetup open /dev/sdb <nome_do_disco_encriptado>
 ```
 
-### Step 6: Mount the encrypted disk
+### Formate o volume mapeado
 
-Finally, create a directory to serve as the mount point and mount the decrypted mapping to it.
-
-Finally, run
+Crie um sistema de arquivos no novo mapeamento decriptado. Vamos utilizar o sistema de arquivos ext4 para essa demo.
 
 ```bash
-sudo mkdir /mnt/<mount_point>
-sudo mount /dev/mapper/<encrypted_disk_name> /mnt/<mount_point> 
+sudo mkfs.ext4 /dev/mapper/<nome_do_disco_encriptado>
 ```
 
-Verify that the disk is successfully mounted and available by running:
+### Monte o disco encriptado
+
+Finalmente, crie um diretório para servir como ponto de montagem e monte o mapeamento decriptado para ele. Execute:
+
+```bash
+sudo mkdir -p /mnt/<ponto_de_montagem>
+sudo mount /dev/mapper/<nome_do_disco_encriptado> /mnt/<ponto_de_montagem> 
+```
+
+Verifique que o disco está montado com sucesso e disponível executando:
 
 ```bash
 df -h
